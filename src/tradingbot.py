@@ -22,7 +22,7 @@ ALPACA_CREDS = {
 
 class MLTrader(Strategy):
     def initialize(self, symbol: str = "SPY", cash_at_risk: float = 0.5):
-        print(f"INFO: initializing")
+        print("INFO: initializing")
         self.sleeptime = "24H"
         self.last_trade = None
 
@@ -56,7 +56,7 @@ class MLTrader(Strategy):
         return probability, sentiment
 
     def on_trading_iteration(self):
-        print(f"INFO: trading loop")
+        print("INFO: trading loop")
         cash, last_price, quantity = self.position_sizing()
         probability, sentiment = self.get_sentiment()
 
@@ -112,15 +112,15 @@ strat_dict = {
 
 strategy = MLTrader(**strat_dict, force_start_immediately=True)
 
-# start_date = datetime(2022,1,1)
-# end_date = start_date + timedelta(days=365*2)
+start_date = datetime(2022, 1, 1)
+end_date = start_date + timedelta(days=365 * 2)
 
-# backtest_dict = {
-#     "datasource_class": YahooDataBacktesting,
-#     "backtesting_start": start_date,
-#     "backtesting_end": end_date,
-#     "benchmark_asset": Asset(symbol="AAPL", asset_type="stock")
-# }
+backtest_dict = {
+    "datasource_class": YahooDataBacktesting,
+    "backtesting_start": start_date,
+    "backtesting_end": end_date,
+    "benchmark_asset": Asset(symbol="AAPL", asset_type="stock"),
+}
 
 # strategy.backtest(
 #     YahooDataBacktesting,
