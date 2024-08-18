@@ -5,8 +5,8 @@ timedelta==2020.12.3
 torch==2.2.0
 transformers==4.37.2
 
-jupyter
-black==23.9.1
+jupyter==1.0.0
+black[jupyter]==23.9.1
 flake8==6.1.0
 ipython==8.26.0
 ipykernel==6.25.2

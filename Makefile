@@ -32,7 +32,7 @@ $(PYTHON) $(PYTEST) $(FLAKE8) $(BLACK) $(PYCLEAN) $(PRECOMMIT): $(REQUIREMENTS)
 	python3 -m venv $(VENV_NAME)
 	$(VENV_NAME)/bin/pip install -r $<
 
-verify_install: ## check environment installation/command version
+verify_install: setup_env ## check environment installation/command version
 	@echo "Testing python env..."
 	@echo -e "\n***************************\npython version:"&&\
 	$(PYTHON) --version &&\
