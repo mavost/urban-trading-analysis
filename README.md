@@ -1,34 +1,33 @@
-# TraderBot
-Build a trader bot which looks at sentiment of live news events and trades appropriately. 
+# Technical Analysis
 
-## See it live and in action 📺
-<img src="https://i.imgur.com/FaQH8rz.png"/>
+## General startup🚀
 
-# Startup 🚀
-1. Create a virtual environment `conda create -n trader python=3.10` 
-2. Activate it `conda activate trader`
-3. Install initial deps `pip install lumibot timedelta alpaca-trade-api==3.1.1`
-4. Install transformers and friends `pip install torch torchvision torchaudio transformers` 
-5. Update the `API_KEY` and `API_SECRET` with values from your Alpaca account 
-6. Run the bot `python tradingbot.py`
+1. Clone repo and change into project root directory.
+2. Create a virtual environment `python3 -m venv python_env`.
+3. Activate it `source python_env/bin/activate`.
+4. (Optionally): skip transformers and friends, initially, by commenting them out in `requirements.txt`,
+i.e., *torch, torchvision, torchaudio, transformers*.
+5. Install dependencies `pip install -r requirements.txt`, considering sequential approach, due to package size.
 
-<p>N.B. Torch installation instructions will vary depending on your operating system and hardware. See here for more: 
-<a href="pytorch.org/">PyTorch Installation Instructions</a></p>
+### Startup for trader bot notebook🚀
 
-If you're getting an SSL error when you attempt to call out to the Alpaca Trading api, you'll need to install the required SSL certificates into your machine.
-1. Download the following intermediate SSL Certificates, these are required to communicate with Alpaca
-* https://letsencrypt.org/certs/lets-encrypt-r3.pem 
-* https://letsencrypt.org/certs/isrg-root-x1-cross-signed.pem 
-2. Once downloaded, change the file extension of each file to `.cer` 
-3. Double click the file and run through the wizard to install it, use all of the default selections. 
+1. Create an [Alpaca](https://alpaca.markets/) paper trading account and generate API credentials.
+2. Copy `.env-dist` file to `.env` and update the `ALP_API_KEY` and `ALP_API_SECRET` with values from your Alpaca account.
+3. Use the jupyter notebook: `src/tradingbot.ipynb` to run the trading bot showcase interactively.
 
-</br>
-# Other References 🔗
+## Disclaimers
 
-<p>-<a href="github.com/Lumiwealth/lumibot)">Lumibot</a>:trading bot library, makes lifecycle stuff easier .</p>
+### Trader bot
 
-# Who, When, Why?
+- [Youtube](https://www.youtube.com/watch?v=c9OjEThuJjY)
+- [Github](https://github.com/nicknochnack/MLTradingBot)
 
-👨🏾‍💻 Author: Nick Renotte <br />
-📅 Version: 1.x<br />
-📜 License: This project is licensed under the MIT License </br>
+Build a trader bot which looks at sentiment of live news events and trades appropriately.
+
+👨🏾‍💻 Author: Nick Renotte  
+📅 Version: 1.x  
+📜 License: This project is licensed under the MIT License
+
+## Other References 🔗
+
+[Lumibot](https://github.com/Lumiwealth/lumibot): trading bot library, makes lifecycle stuff easier.
