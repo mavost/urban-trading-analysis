@@ -1,12 +1,13 @@
 alpaca-trade-api==3.1.1
 lumibot==3.0.6
+plotly==5.23.0
 python-dotenv==0.20.0
 timedelta==2020.12.3
 torch==2.2.0
 transformers==4.37.2
 
-jupyter
-black==23.9.1
+jupyter==1.0.0
+black[jupyter]==23.9.1
 flake8==6.1.0
 ipython==8.26.0
 ipykernel==6.25.2
@@ -109,7 +110,6 @@ peewee==3.17.6
 pexpect==4.9.0
 pillow==10.4.0
 platformdirs==4.2.2
-plotly==5.23.0
 pluggy==1.5.0
 polygon-api-client==1.14.2
 prompt_toolkit==3.0.47
