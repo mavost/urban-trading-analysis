@@ -2,7 +2,7 @@ MAKEFLAGS += --warn-undefined-variables
 .SHELLFLAGS := -eu -o pipefail -c
 
 all: help
-.PHONY: all, help, setup_env, ci, black, lint, pre-commit-full, test, clean
+.PHONY: all help setup_env ci black lint pre-commit-full test clean
 
 # Use bash for inline if-statements
 SHELL:=bash
