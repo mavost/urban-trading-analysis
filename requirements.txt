@@ -1,5 +1,6 @@
 alpaca-trade-api==3.1.1
 lumibot==3.6.24
+ib_async==1.0.3
 plotly==5.23.0
 python-dotenv==0.20.0
 timedelta==2020.12.3
