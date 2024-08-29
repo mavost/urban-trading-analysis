@@ -2,18 +2,18 @@
 # coding: utf-8
 
 # # Notebook to play with EMAs
-# 
+#
 # Latest version: 2024-08-1620
 # Author: MvS
-# 
+#
 # ## Description
-# 
+#
 # Similar approach to SMA notebook but using the more volatile exponential moving average (EMA) indicator.
-# 
+#
 # ## Result
-# 
+#
 # A vague trading signal (Long/Short) based on Low/High EMAs and a stop-loss estimation.
-# 
+#
 
 import yfinance as yf
 import pandas as pd
@@ -143,15 +143,12 @@ stocks = [
     ('VOD', 'Mobile telecommunications'),
     ('WEIR', 'Industrial goods and services'),
     ('WTB', 'Retail hospitality'),
-    ('WPP', 'Media')
+    ('WPP', 'Media'),
 ]
 
 
 for stock, sector in stocks:
-
-    print(
-        f"""Getting market data for {stock}."""
-    )
+    print(f"""Getting market data for {stock}.""")
 
     try:
         # Grab sufficient stock data for averaging SMAs
@@ -169,11 +166,11 @@ for stock, sector in stocks:
         continue
 
     # ### Define dynamic stop-losses based on EMAs
-    # 
+    #
     # - use worst price quote of each day and calculate an exponential 30-day mean to define a stop-loss for long positions
     # - reciprocately, the best price quote of each day and calculate an exponential 30-day mean to define a stop-loss for short positions
     # - both curves are tracking each other with an offset and define a corridor of insignificant price action
-    # 
+    #
 
     stock_df = load_df.copy()
 
@@ -219,13 +216,18 @@ for stock, sector in stocks:
 
     stock_df['Valid'] = stock_df.apply(valid_signal, axis=1)
 
-    stock_df['Valid_scaled'] = 2**sig_scale + (stock_df['Valid'] * 2 ** (sig_scale - 2))
+    stock_df['Valid_scaled'] = 2**sig_scale + (
+        stock_df['Valid'] * 2 ** (sig_scale - 2)
+    )
 
     # Despiking a curve for single outliers
 
     # Compare neighbor values: spike has two opposites on either side with same polarity
     def despike(x):
-        if x['Valid_N_Shift'] == x['Valid_P_Shift'] and x['Valid'] != x['Valid_N_Shift']:
+        if (
+            x['Valid_N_Shift'] == x['Valid_P_Shift']
+            and x['Valid'] != x['Valid_N_Shift']
+        ):
             return x['Valid_N_Shift']
         elif pd.isna(x['Valid_P_Shift']):
             return 0.0
@@ -233,7 +235,6 @@ for stock, sector in stocks:
             return x['Valid']
 
     for iter in range(0, 3):
-
         # Shifting curve forward / backward
         stock_df['Valid_P_Shift'] = stock_df['Valid'].shift(1)
         stock_df['Valid_N_Shift'] = stock_df['Valid'].shift(-1)
@@ -243,7 +244,9 @@ for stock, sector in stocks:
         # Replace old with new
         stock_df['Valid'] = stock_df['Valid_Despike']
 
-    stock_df['Valid_scaled'] = 2**sig_scale + (stock_df['Valid'] * 2 ** (sig_scale - 2))
+    stock_df['Valid_scaled'] = 2**sig_scale + (
+        stock_df['Valid'] * 2 ** (sig_scale - 2)
+    )
 
     # Clean up
     stock_df.drop(
@@ -303,7 +306,9 @@ for stock, sector in stocks:
         ].copy()
 
         # Calculate length of signals
-        signals_df['Signal_len'] = -signals_df.index.to_series().diff(periods=-1).dt.days
+        signals_df['Signal_len'] = (
+            -signals_df.index.to_series().diff(periods=-1).dt.days
+        )
         # Calculate age of signals
         signals_df['Signal_age'] = (
             signals_df['dt_end'] - signals_df.index.to_series()
@@ -357,12 +362,33 @@ for stock, sector in stocks:
     stock_df['dt_end'] = dt_end.strftime('%Y-%m-%d')
     stock_df = stock_df.round(3)
 
-    order = ['Symbol', 'Sector', 'dt_day', 'dt_start', 'dt_end',
-        'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume',
-        'SMA_200', 'SMA_050', 'EMA_030_Long', 'EMA_030_Short',
-        'sig_scale', 'Valid', 'Valid_scaled', 'On_Signal', 'On_Signal_scaled',
-        'Off_Signal', 'Off_Signal_scaled' ,
-        'Signal_ref', 'Signal_len', 'Signal_gap', 'Signal_age'
+    order = [
+        'Symbol',
+        'Sector',
+        'dt_day',
+        'dt_start',
+        'dt_end',
+        'Open',
+        'High',
+        'Low',
+        'Close',
+        'Adj Close',
+        'Volume',
+        'SMA_200',
+        'SMA_050',
+        'EMA_030_Long',
+        'EMA_030_Short',
+        'sig_scale',
+        'Valid',
+        'Valid_scaled',
+        'On_Signal',
+        'On_Signal_scaled',
+        'Off_Signal',
+        'Off_Signal_scaled',
+        'Signal_ref',
+        'Signal_len',
+        'Signal_gap',
+        'Signal_age',
     ]
 
     stock_df[order].to_csv(
@@ -372,6 +398,6 @@ for stock, sector in stocks:
         index=False,
         quoting=csv.QUOTE_NONNUMERIC,
         mode='a',
-        header=write_header
+        header=write_header,
     )
     write_header = False
