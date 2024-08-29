@@ -51,7 +51,8 @@ def high_range(x):
 
 def find_isolated_spikes(series, num_spikes=10, n_distance=5):
     """
-    Find isolated maximum spikes in a Pandas series with a safety distance between each event.
+    Find isolated maximum spikes in a Pandas series with a safety distance between each
+    event.
 
     :param series: Input Pandas Series.
     :param num_spikes: Number of spikes to identify.
@@ -116,7 +117,6 @@ def calc_atr_spikes(yf_df: pd.DataFrame, periods=100):
     )
     extrema_df.sort_index(ascending=True, axis=0, inplace=True)
 
-    ##---- Different means
     scaler = 1.0
 
     result = []

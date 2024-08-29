@@ -8,7 +8,8 @@
 #
 # ## Description
 #
-# Similar approach to SMA notebook but using the more volatile exponential moving average (EMA) indicator.
+# Similar approach to SMA notebook but using the more volatile exponential moving
+# average (EMA) indicator.
 #
 # ## Result
 #
@@ -167,9 +168,12 @@ for stock, sector in stocks:
 
     # ### Define dynamic stop-losses based on EMAs
     #
-    # - use worst price quote of each day and calculate an exponential 30-day mean to define a stop-loss for long positions
-    # - reciprocately, the best price quote of each day and calculate an exponential 30-day mean to define a stop-loss for short positions
-    # - both curves are tracking each other with an offset and define a corridor of insignificant price action
+    # - use worst price quote of each day and calculate an exponential 30-day mean to
+    #   define a stop-loss for long positions
+    # - reciprocately, the best price quote of each day and calculate an exponential
+    #   30-day mean to define a stop-loss for short positions
+    # - both curves are tracking each other with an offset and define a corridor of
+    #   insignificant price action
     #
 
     stock_df = load_df.copy()
@@ -186,7 +190,8 @@ for stock, sector in stocks:
         stock_df['High'].ewm(span=ema_length, adjust=False).mean() * ema_scaler
     )  # STOP LOSS SHORT
 
-    # Now that we calculated the SMAs and EMAs, we can remove the data points before the actual AOI that we want.
+    # Now that we calculated the SMAs and EMAs, we can remove the data points before the
+    #  actual AOI that we want.
     stock_df = stock_df[-max(periods) :].copy()
 
     # Add helpers for time period calculation
@@ -200,8 +205,8 @@ for stock, sector in stocks:
 
     # Define the corridors for operation as strong deviations of fast from slow SMA
     def valid_signal(x):
-        high = f"High"
-        low = f"Low"
+        high = 'High'
+        low = 'Low'
         long = f"EMA_{ema_length:03}_Long"
         short = f"EMA_{ema_length:03}_Short"
 
