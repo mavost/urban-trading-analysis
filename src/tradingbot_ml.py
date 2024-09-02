@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# Build a trader bot which looks at sentiment of live news events and trades appropriately.
+# [Github](https://github.com/nicknochnack/MLTradingBot)
+
+# Author: Nick Renotte  
+# Version: 1.x  
+# License: This project is licensed under the MIT License
+
 from lumibot.brokers import Alpaca
 from lumibot.backtesting import YahooDataBacktesting
 from lumibot.strategies.strategy import Strategy
