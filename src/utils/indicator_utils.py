@@ -7,6 +7,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+# calculate exponential moving average
+def ema(x):
+    pass
+
+
 # calculate true range
 def true_range(x):
     high = x['High']
