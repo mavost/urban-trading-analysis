@@ -22,6 +22,7 @@ import pandas as pd
 import datetime
 import csv
 from math import log2
+import time
 
 
 # Standard SMAs
@@ -44,117 +45,30 @@ dt_data_start = dt_end - datetime.timedelta(days=max(periods + [ema_length]) * 3
 
 write_header = True
 
-stocks = [
-    ('III', 'Financial services'),
-    ('ADM', 'Insurance'),
-    ('AAF', 'Telecommunications services'),
-    ('AAL', 'Mining'),
-    ('ANTO', 'Mining'),
-    ('AHT', 'Support services'),
-    ('ABF', 'Food & tobacco'),
-    ('AZN', 'Pharmaceuticals & biotechnology'),
-    ('AUTO', 'Media'),
-    ('AV', 'Life insurance'),
-    ('BME', 'Retailers'),
-    ('BA', 'Aerospace & defence'),
-    ('BARC', 'Banks'),
-    ('BDEV', 'Household goods & home construction'),
-    ('BEZ', 'Insurance'),
-    ('BKG', 'Household goods & home construction'),
-    ('BP', 'Oil & gas producers'),
-    ('BATS', 'Tobacco'),
-    ('BT-A', 'Telecommunications services'),
-    ('BNZL', 'Support services'),
-    ('BRBY', 'Personal goods'),
-    ('CNA', 'Multiline utilities'),
-    ('CCH', 'Beverages'),
-    ('CPG', 'Support services'),
-    ('CTEC', 'Health care equipment & supplies'),
-    ('CRDA', 'Chemicals'),
-    ('DARK', 'Software & Computer Services'),
-    ('DCC', 'Support services'),
-    ('DGE', 'Beverages'),
-    ('DPLM', 'Industrial Support services'),
-    ('EDV', 'Precious Metals and Mining'),
-    ('ENT', 'Travel & leisure'),
-    ('EZJ', 'Travel & leisure'),
-    ('EXPN', 'Support services'),
-    ('FCIT', 'Financial services'),
-    ('FRAS', 'Retailers'),
-    ('FRES', 'Mining'),
-    ('GLEN', 'Mining'),
-    ('GSK', 'Pharmaceuticals & biotechnology'),
-    ('HLN', 'Pharmaceuticals & biotechnology'),
-    ('HLMA', 'Electronic equipment & parts'),
-    ('HL', 'Financial services'),
-    ('HIK', 'Pharmaceuticals & biotechnology'),
-    ('HWDN', 'Homebuilding & construction supplies'),
-    ('HSBA', 'Banks'),
-    ('IHG', 'Travel & leisure'),
-    ('IMI', 'Machinery, tools, heavy vehicles, trains & ships'),
-    ('IMB', 'Tobacco'),
-    ('INF', 'Media'),
-    ('ICG', 'Financial services'),
-    ('IAG', 'Travel & leisure'),
-    ('ITRK', 'Support services'),
-    ('JD', 'General retailers'),
-    ('KGF', 'Retailers'),
-    ('LAND', 'Real estate investment trusts'),
-    ('LGEN', 'Life insurance'),
-    ('LLOY', 'Banks'),
-    ('LMP', 'Real Estate Investment Trusts'),
-    ('LSEG', 'Financial services'),
-    ('MNG', 'Financial services'),
-    ('MKS', 'Food & drug retailing'),
-    ('MRO', 'Aerospace & defence'),
-    ('MNDI', 'Containers & packaging'),
-    ('NG', 'Multiline utilities'),
-    ('NWG', 'Banks'),
-    ('NXT', 'General retailers'),
-    ('PSON', 'Media'),
-    ('PSH', 'Financial services'),
-    ('PSN', 'Household goods & home construction'),
-    ('PHNX', 'Life insurance'),
-    ('PRU', 'Life insurance'),
-    ('RKT', 'Household goods & home construction'),
-    ('REL', 'Media'),
-    ('RTO', 'Support services'),
-    ('RMV', 'Media'),
-    ('RIO', 'Mining'),
-    ('RR', 'Aerospace & defence'),
-    ('SGE', 'Software & computer services'),
-    ('SBRY', 'Food & drug retailing'),
-    ('SDR', 'Financial services'),
-    ('SMT', 'Collective investments'),
-    ('SGRO', 'Real estate investment trusts'),
-    ('SVT', 'Multiline utilities'),
-    ('SHEL', 'Oil & gas producers'),
-    ('SMDS', 'General industrials'),
-    ('SMIN', 'General industrials'),
-    ('SN', 'Health care equipment & supplies'),
-    ('SPX', 'Industrial engineering'),
-    ('SSE', 'Electrical utilities & independent power producers'),
-    ('STAN', 'Banks'),
-    ('TW', 'Household goods & home construction'),
-    ('TSCO', 'Food & drug retailing'),
-    ('ULVR', 'Personal goods'),
-    ('UU', 'Multiline utilities'),
-    ('UTG', 'Real estate investment trusts'),
-    ('VTY', 'Home Construction'),
-    ('VOD', 'Mobile telecommunications'),
-    ('WEIR', 'Industrial goods and services'),
-    ('WTB', 'Retail hospitality'),
-    ('WPP', 'Media'),
-]
+index = 'SP400'
+# index = 'DJU'
 
+f_exchange = None
 
-for stock, sector in stocks:
+ticker_df = pd.read_csv(
+    f"../logs/{current_date}_{index}_ticker.csv", sep=",", quotechar='"'
+)
+
+print(ticker_df)
+
+# for stock, sector in [('HELE', 'bla')]:
+for stock, sector in ticker_df[['Symbol', 'Sector']].values.tolist():
     print(f"""Getting market data for {stock}.""")
+
+    time.sleep(0.02)
+
+    if f_exchange is not None:
+        stock = f"{stock}.{f_exchange}"
 
     try:
         # Grab sufficient stock data for averaging SMAs
         load_df = yf.download(
-            f"{stock}.L",
+            stock,
             start=dt_data_start.strftime('%Y-%m-%d'),
             end=dt_end.strftime('%Y-%m-%d'),
             progress=False,
@@ -271,9 +185,7 @@ for stock, sector in stocks:
     # Shift forward
     stock_df['Shift'] = stock_df['Valid'].shift(1)
     # Fill NaN
-    stock_df['Shift'] = stock_df['Shift'].interpolate(
-        method='backfill', limit_direction='backward'
-    )
+    stock_df['Shift'] = stock_df['Shift'].bfill()
 
     # Identify signal onsets
     stock_df['On_Signal'] = stock_df.apply(get_signal, axis=1)
@@ -284,9 +196,7 @@ for stock, sector in stocks:
     # Shift backward
     stock_df['Shift'] = stock_df['Valid'].shift(-1)
     # Fill NaN
-    stock_df['Shift'] = stock_df['Shift'].interpolate(
-        method='pad', limit_direction='forward'
-    )
+    stock_df['Shift'] = stock_df['Shift'].ffill()
 
     # Identify signal terminations
     stock_df['Off_Signal'] = stock_df.apply(get_signal, axis=1)
@@ -319,7 +229,9 @@ for stock, sector in stocks:
             signals_df['dt_end'] - signals_df.index.to_series()
         ).dt.days
         # Add missing length
-        signals_df['Signal_len'].fillna(signals_df['Signal_age'], inplace=True)
+        signals_df['Signal_len'] = signals_df['Signal_len'].fillna(
+            signals_df['Signal_age']
+        )
 
         # Calculate gap between signals
         signals_df['Signal_gap'] = signals_df.index.to_series().diff(periods=1).dt.days
@@ -328,7 +240,9 @@ for stock, sector in stocks:
             signals_df.index.to_series() - signals_df['dt_start']
         ).dt.days
         # Add missing gap
-        signals_df['Signal_gap'].fillna(signals_df['Signal_ref'], inplace=True)
+        signals_df['Signal_gap'] = signals_df['Signal_gap'].fillna(
+            signals_df['Signal_ref']
+        )
 
     if stock_df['On_Signal'].any() != 0:
         # Add back the signal calculations
@@ -397,7 +311,7 @@ for stock, sector in stocks:
     ]
 
     stock_df[order].to_csv(
-        f"../logs/{current_date}_screening.csv",
+        f"../logs/{current_date}_{index}_screening.csv",
         sep=",",
         quotechar='"',
         index=False,
