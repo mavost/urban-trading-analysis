@@ -6,10 +6,70 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# calculate simple moving average
+def sma(series, length=9):
+    logger.info(f"Calculating SMA({length})")
+    # omitting min_periods creates gap
+    return series.rolling(length, min_periods=1).mean()
+
 
 # calculate exponential moving average
-def ema(x):
-    pass
+def ema(series, length=9):
+    logger.info(f"Calculating EMA({length})")
+
+    series = series.sort_index()
+    # adjust = False enables recursion formula
+    return series.ewm(span=length,min_periods=0,adjust=False,ignore_na=False).mean()
+
+# calculate range
+def vola_range(close, high, low, mode='atr', length=9, percentile=False):
+    if mode not in ['atr', 'ahr', 'alr']:
+        mode = 'atr'
+
+    # shift close
+    close_p = close.shift(1).bfill()
+    df = pd.concat([close_p, high, low], axis=1)
+    df.columns = ['close_p', 'high', 'low']
+
+    if mode == 'alr':
+        logger.info(f"Calculating ALR({length})")
+        def atr_function(x):
+            close_p = x['close_p']
+            high = x['high']
+            low = x['low']
+            return max(
+                (close_p + high) / 2.0 - low,
+                close_p - low,
+                0
+            )
+    elif mode == 'ahr':
+        logger.info(f"Calculating AHR({length})")
+        def atr_function(x):
+            close_p = x['close_p']
+            high = x['high']
+            low = x['low']
+            return max(
+                high - (close_p + low) / 2.0,
+                high - close_p,
+                0
+            )
+    else:
+        logger.info(f"Calculating ATR({length})")
+        def atr_function(x):
+            close_p = x['close_p']
+            high = x['high']
+            low = x['low']
+            return max(
+                high - low,
+                abs(high - close_p),
+                abs(close_p - low),
+            )
+
+    series = df.apply(atr_function, axis=1)
+    series = series.rolling(length, min_periods=1).mean()
+    if percentile:
+        return series / close
+    return series
 
 
 # calculate true range
