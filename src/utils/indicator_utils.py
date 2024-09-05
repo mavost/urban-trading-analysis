@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import datetime
+from math import  log2
 
 import logging
 
@@ -70,6 +71,49 @@ def vola_range(close, high, low, mode='atr', length=9, percentile=False):
     if percentile:
         return series / close
     return series
+
+# calculate signals
+def crossovers(short, long, scaledsignal=False):
+
+    calc_df = pd.concat([short, long], axis=1)
+    calc_df.columns = ['s', 'l']
+
+    # Get scaler
+    sig_str = ''
+    sig_scale = 0
+    if scaledsignal:
+        sig_str = 'scaled'
+        sig_scale = 2**int(log2(calc_df['s'].min()))
+
+    logger.info(f"Calculating {sig_str} mode ({sig_scale}) and trading signals")
+
+
+    # Get relation of curves (short curves higher than long curve: positive (LONG/BUY))
+    calc_df['m'] = np.where(short >= long,sig_scale + 1, 0)
+    calc_df['m'] = np.where(short < long, sig_scale - 1, calc_df['m'])
+
+    # Signals are mode changes, i.e., crossovers
+    calc_df['p'] = np.where(
+        np.logical_and(
+            calc_df['m'] > sig_scale,
+            calc_df['m'].shift(1) < sig_scale,
+        ),
+        sig_scale,
+        None
+    )
+
+    calc_df['n'] = np.where(
+        np.logical_and(
+            calc_df['m'] < sig_scale,
+            calc_df['m'].shift(1) > sig_scale,
+        ),
+        sig_scale,
+        None
+    )
+    calc_df = calc_df[['m', 'p', 'n']]
+    calc_df.columns = ['Mode', 'P_Signal', 'N_Signal']
+
+    return calc_df
 
 
 # calculate true range
