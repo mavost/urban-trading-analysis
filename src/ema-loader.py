@@ -23,7 +23,9 @@ import datetime
 import csv
 from math import log2
 import time
+import logging
 
+logger = logging.getLogger(__name__)
 
 # Standard SMAs
 periods = [200, 50]
@@ -54,11 +56,11 @@ ticker_df = pd.read_csv(
     f"../logs/{current_date}_{index}_ticker.csv", sep=",", quotechar='"'
 )
 
-print(ticker_df)
+logger.info(ticker_df)
 
 # for stock, sector in [('HELE', 'bla')]:
 for stock, sector in ticker_df[['Symbol', 'Sector']].values.tolist():
-    print(f"""Getting market data for {stock}.""")
+    logger.info(f"""Getting market data for {stock}.""")
 
     time.sleep(0.02)
 
@@ -77,7 +79,7 @@ for stock, sector in ticker_df[['Symbol', 'Sector']].values.tolist():
         assert load_df.shape[1] == 6 and load_df.shape[0] > max(periods + [ema_length])
 
     except AssertionError:
-        print(f"Download failed for symbol {stock}.  Skipping...")
+        logger.info(f"Download failed for symbol {stock}.  Skipping...")
         continue
 
     # ### Define dynamic stop-losses based on EMAs
@@ -213,7 +215,7 @@ for stock, sector in ticker_df[['Symbol', 'Sector']].values.tolist():
     )
 
     if stock_df['On_Signal'].any() != 0:
-        print('Some signals found...')
+        logger.info('Some signals found...')
 
         # Filter rows where either 'On_Signal' or 'Off_Signal' is non-zero
         signals_df = stock_df[
