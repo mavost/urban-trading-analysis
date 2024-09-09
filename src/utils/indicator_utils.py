@@ -116,6 +116,43 @@ def crossovers(short, long, scaledsignal=False):
     return calc_df
 
 
+# Calculate Wilder's relative strength index
+def wilder_rsi(close, open=None, length=14):
+    logger.info(f"Calculating RSI({length})")
+    # Gains/losses during trading hours
+    gains = close.diff(1)
+    if open is not None:
+        gains = (close - open) / open
+    
+    df = pd.concat([close, gains], axis=1)
+    df.columns = ['close', 'diff']
+    df = df.fillna(0.0)
+
+    # Split gains and losses
+    df['gain'] = df['diff'].clip(lower=0)
+    df['loss'] = df['diff'].clip(upper=0).abs()
+
+
+    for col in ['gain', 'loss']:
+        # Calculate initial average gains and losses using rolling mean
+        df[f"avg_{col}"] = df[col].rolling(window=length, min_periods=1).mean()
+        s_col = df.columns.get_loc(col)
+        t_col = df.columns.get_loc(f"avg_{col}")
+        # Apply Wilder's smoothing formula using apply after the initial window
+        for i in range(length + 1, len(df)):
+            df.iloc[i, t_col] = (df.iloc[i - 1, t_col] * (length - 1) + df.iloc[i, s_col]) / length
+
+
+    # Calculate RS and RSI
+    df['rs'] = df['avg_gain'] / df['avg_loss']
+    df['rsi'] = 100 - (100 / (1.0 + df['rs']))
+    df = df.fillna(0)
+    series = df['rsi']
+    series[:5] = 50.0
+
+    return series
+
+
 # calculate true range
 def true_range(x):
     high = x['High']
