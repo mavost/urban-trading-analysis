@@ -7,6 +7,80 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# scale price action
+def calibrate_prices(df, key='Close'):
+    logger.info(f"Scaling equity price action data based on first {key}")
+    
+    columns = ['Close', 'Open', 'High', 'Low', 'Adj Close']
+    # Key needs to be in columns
+    assert key in columns
+    
+    # Verify all yf columns exist
+    for col in columns:
+        assert col in df.columns
+
+    df_scaled = df.copy()
+    scaler = df[key].iloc[0]
+    for col in columns:
+        df_scaled[col] = df_scaled[col] / scaler * 100.0
+    return df_scaled
+
+# scale trading volume action
+def calibrate_volume(df, key='Volume', method='First', divisor=100000, scaler=100000):
+    
+    # Key needs to be in columns
+    assert key in df.columns
+
+    # Identify scaler
+    if method=='First':
+        divisor = df[key].iloc[0]
+    elif method=='Manual':
+        divisor = int(divisor)
+    elif method=='Median':
+        divisor = df[key].median()
+    else:
+        method = 'No-Op'
+        divisor = 1
+        scaler = 1
+    assert divisor > 0
+    assert scaler > 0
+
+    logger.info(f"Scaling trading volume data based on {key} and method {method} with a divisor of {divisor} and scaler {scaler}")
+
+    df_scaled = df.copy()
+
+    df_scaled[key] = df_scaled[key] / divisor * scaler
+    df_scaled = df_scaled.astype({key: int})
+    return df_scaled
+
+# calculate sum of maximal price envelopes
+def price_movement(df, key_dict={'Open': 'Open', 'Close': 'Close', 'High': 'High', 'Low': 'Low'}, length=14):
+    logger.info(f"Calculating accumulated price movement({length})")
+
+    df_copy = df.copy()
+    # Verify all yf columns exist
+    for key, value in key_dict.items():
+        assert value in df_copy.columns
+
+    # shift close
+    df_copy['p_close'] = df_copy[key_dict['Close']].shift(1).bfill()
+
+    def max_price(x):
+        open = x[key_dict['Open']]
+        close = x[key_dict['Close']]
+        high = x[key_dict['High']]
+        low = x[key_dict['Low']]
+        p_close = x['p_close']
+        main_comp = abs(open - p_close) + 2 * high - 2 * low
+        return max(
+            main_comp + close - open,
+            main_comp - close + open
+        )
+
+    series = df_copy.apply(max_price, axis=1)
+    series = series.rolling(length, min_periods=1).sum()
+    return series
+
 # calculate simple moving average
 def sma(series, length=9):
     logger.info(f"Calculating SMA({length})")
