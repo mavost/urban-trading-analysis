@@ -2,7 +2,7 @@ MAKEFLAGS += --warn-undefined-variables
 .SHELLFLAGS := -eu -o pipefail -c
 
 all: help
-.PHONY: all help setup_env ci black lint pre-commit-full test clean
+.PHONY: all help setup_env ci black lint jupyter-nb-clear-output pre-commit-full test clean
 
 # Use bash for inline if-statements
 SHELL:=bash
@@ -15,6 +15,7 @@ PYTEST = $(VENV_NAME)/bin/pytest
 FLAKE8 = $(VENV_NAME)/bin/flake8
 BLACK = $(VENV_NAME)/bin/black
 PYCLEAN = $(VENV_NAME)/bin/pyclean
+JUPYTER = $(VENV_NAME)/bin/jupyter
 PRECOMMIT = $(VENV_NAME)/bin/pre-commit
 
 ##@ Helpers
@@ -26,9 +27,9 @@ help: ## display this help
 	@printf "\n"
 
 ##@ Preparation
-setup_env: $(PYTHON) $(PYTEST) $(FLAKE8) $(BLACK) $(PYCLEAN) $(PRECOMMIT)  ## install local dev environment
+setup_env: $(PYTHON) $(PYTEST) $(FLAKE8) $(BLACK) $(PYCLEAN) $(JUPYTER) $(PRECOMMIT)  ## install local dev environment
 
-$(PYTHON) $(PYTEST) $(FLAKE8) $(BLACK) $(PYCLEAN) $(PRECOMMIT): $(REQUIREMENTS)
+$(PYTHON) $(PYTEST) $(FLAKE8) $(BLACK) $(PYCLEAN) $(JUPYTER) $(PRECOMMIT): $(REQUIREMENTS)
 	python3 -m venv $(VENV_NAME)
 	$(VENV_NAME)/bin/pip install -r $<
 
@@ -44,6 +45,8 @@ verify_install: setup_env ## check environment installation/command version
 	$(BLACK) --version &&\
 	echo -e "\n***************************\npyclean version:"&&\
 	$(PYCLEAN) --version &&\
+	echo -e "\n***************************\njupyter component versions:"&&\
+	$(JUPYTER) --version &&\
 	echo -e "\n***************************\npre-commit version:"&&\
 	$(PRECOMMIT) --version
 
@@ -57,6 +60,9 @@ black: ## format your code using black
 lint: ## run flake8 linter
 	$(FLAKE8) --version
 	$(FLAKE8)
+
+jupyter-nb-clear-output: ## target for clearing Jupyter notebook output
+	$(JUPYTER) nbconvert --ClearOutputPreprocessor.enabled=True --inplace $(ARGS)
 
 pre-commit-full: ## run pre-commit hooks
 	$(PRECOMMIT) --version

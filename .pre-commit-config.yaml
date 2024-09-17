@@ -28,4 +28,4 @@ repos:
         files: \.ipynb$
         stages: [commit]
         language: system
-        entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace
+        entry: bash -c 'make jupyter-nb-clear-output ARGS="$@"' --
