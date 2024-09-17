@@ -97,16 +97,16 @@ def ema(series, length=9):
     return series.ewm(span=length,min_periods=0,adjust=False,ignore_na=False).mean()
 
 # calculate range
-def vola_range(close, high, low, mode='atr', length=9, percentile=False):
-    if mode not in ['atr', 'ahr', 'alr']:
-        mode = 'atr'
+def vola_range(close, high, low, mode='ATR', length=9, percentile=False):
+    if mode not in ['ATR', 'AHR', 'ALR']:
+        mode = 'ATR'
 
     # shift close
     close_p = close.shift(1).bfill()
     df = pd.concat([close_p, high, low], axis=1)
     df.columns = ['close_p', 'high', 'low']
 
-    if mode == 'alr':
+    if mode == 'ALR':
         logger.info(f"Calculating ALR({length})")
         def atr_function(x):
             close_p = x['close_p']
@@ -117,7 +117,7 @@ def vola_range(close, high, low, mode='atr', length=9, percentile=False):
                 close_p - low,
                 0
             )
-    elif mode == 'ahr':
+    elif mode == 'AHR':
         logger.info(f"Calculating AHR({length})")
         def atr_function(x):
             close_p = x['close_p']
@@ -227,48 +227,6 @@ def wilder_rsi(close, open=None, length=14):
     return series
 
 
-# calculate true range
-def true_range(x):
-    high = x['High']
-    low = x['Low']
-    close_p = x['ClosePrev']
-
-    if pd.isna(close_p):
-        return high - low
-    else:
-        return max(
-            high - low,
-            abs(high - close_p),
-            abs(close_p - low),
-        )
-
-
-# calculate low range
-def low_range(x):
-    open = x['Open']
-    high = x['High']
-    low = x['Low']
-    close_p = x['ClosePrev']
-
-    if pd.isna(close_p):
-        return (open + high) / 2.0 - low
-    else:
-        return max((close_p + high) / 2.0 - low, close_p - low, 0)
-
-
-# calculate high range
-def high_range(x):
-    open = x['Open']
-    high = x['High']
-    low = x['Low']
-    close_p = x['ClosePrev']
-
-    if pd.isna(close_p):
-        return high - (open + low) / 2.0
-    else:
-        return max(high - (close_p + low) / 2.0, high - close_p, 0)
-
-
 def find_isolated_spikes(series, num_spikes=10, n_distance=5):
     """
     Find isolated maximum spikes in a Pandas series with a safety distance between each
@@ -279,6 +237,7 @@ def find_isolated_spikes(series, num_spikes=10, n_distance=5):
     :param n_distance: Safety distance between each identified spike.
     :return: DataFrame with the positions and values of the identified spikes.
     """
+    logger.info(f"Identifying {num_spikes} isolated spikes ({n_distance})")
 
     # Copy the series to avoid modifying the original
     series_copy = series.copy()
@@ -313,22 +272,41 @@ def find_isolated_spikes(series, num_spikes=10, n_distance=5):
     return series
 
 
-def calc_atr_spikes(yf_df: pd.DataFrame, periods=100):
-    # We remove the excess data points before the actual AOI that we want.
-    stock_df = yf_df[-periods:].copy()
+def calc_atr_spikes(yf_df: pd.DataFrame, clip_periods=100, length=1, num_spikes=10, n_distance=5):
+    """
+    Convenience function to extract ALR/AHR extrema.
 
-    # Create intermediate
-    stock_df['ClosePrev'] = stock_df['Close'].shift(1)
+    :param yf_df: Input Yahoo Finance dataframe.
+    :param clip_periods: input data clipper (keep last n periods).
+    :param length: pre-extraction smoothing factor.
+    :param num_spikes: Number of spikes to identify.
+    :param n_distance: Safety distance between each identified spike.
+    :return: List of extrema
+    """
+
+    logger.info(f"Getting stats for {num_spikes} isolated HR/LR spikes ({n_distance})")
+
+    for col in ['Close', 'High', 'Low']:
+        assert col in yf_df.columns
+
+    # We remove the excess data points before the actual AOI that we want.
+    stock_df = yf_df[-clip_periods:].copy()
 
     # Calc volas
-    stock_df['HR'] = stock_df.apply(high_range, axis=1)
-    stock_df['LR'] = stock_df.apply(low_range, axis=1)
+    for opt in ['LR', 'HR']:
+        stock_df[opt] = vola_range(
+            close=stock_df['Close'],
+            high=stock_df['High'],
+            low=stock_df['Low'],
+            mode=f"A{opt}",
+            length=length
+        )
 
     high_markers_series = find_isolated_spikes(
-        stock_df['HR'], num_spikes=10, n_distance=5
+        stock_df['HR'], num_spikes=num_spikes, n_distance=n_distance
     )
     low_markers_series = find_isolated_spikes(
-        stock_df['LR'], num_spikes=10, n_distance=5
+        stock_df['LR'], num_spikes=num_spikes, n_distance=n_distance
     )
 
     # Merge series to df
