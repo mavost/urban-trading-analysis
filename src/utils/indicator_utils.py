@@ -1,20 +1,21 @@
 import pandas as pd
 import numpy as np
 import datetime
-from math import  log2
+from math import log2
 
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 # scale price action
 def calibrate_prices(df, key='Close'):
     logger.info(f"Scaling equity price action data based on first {key}")
-    
+
     columns = ['Close', 'Open', 'High', 'Low', 'Adj Close']
     # Key needs to be in columns
     assert key in columns
-    
+
     # Verify all yf columns exist
     for col in columns:
         assert col in df.columns
@@ -25,18 +26,18 @@ def calibrate_prices(df, key='Close'):
         df_scaled[col] = df_scaled[col] / scaler * 100.0
     return df_scaled
 
+
 # scale trading volume action
 def calibrate_volume(df, key='Volume', method='First', divisor=100000, scaler=100000):
-    
     # Key needs to be in columns
     assert key in df.columns
 
     # Identify scaler
-    if method=='First':
+    if method == 'First':
         divisor = df[key].iloc[0]
-    elif method=='Manual':
+    elif method == 'Manual':
         divisor = int(divisor)
-    elif method=='Median':
+    elif method == 'Median':
         divisor = df[key].median()
     else:
         method = 'No-Op'
@@ -45,7 +46,11 @@ def calibrate_volume(df, key='Volume', method='First', divisor=100000, scaler=10
     assert divisor > 0
     assert scaler > 0
 
-    logger.info(f"Scaling trading volume data based on {key} and method {method} with a divisor of {divisor} and scaler {scaler}")
+    logger.info(
+        f"""\n
+    Scaling trading volume data based on {key} and method {method}\n
+     with a divisor of {divisor} and scaler {scaler}"""
+    )
 
     df_scaled = df.copy()
 
@@ -53,8 +58,13 @@ def calibrate_volume(df, key='Volume', method='First', divisor=100000, scaler=10
     df_scaled = df_scaled.astype({key: int})
     return df_scaled
 
+
 # calculate sum of maximal price envelopes
-def price_movement(df, key_dict={'Open': 'Open', 'Close': 'Close', 'High': 'High', 'Low': 'Low'}, length=14):
+def price_movement(
+    df,
+    key_dict={'Open': 'Open', 'Close': 'Close', 'High': 'High', 'Low': 'Low'},
+    length=14,
+):
     logger.info(f"Calculating accumulated price movement({length})")
 
     df_copy = df.copy()
@@ -72,14 +82,12 @@ def price_movement(df, key_dict={'Open': 'Open', 'Close': 'Close', 'High': 'High
         low = x[key_dict['Low']]
         p_close = x['p_close']
         main_comp = abs(open - p_close) + 2 * high - 2 * low
-        return max(
-            main_comp + close - open,
-            main_comp - close + open
-        )
+        return max(main_comp + close - open, main_comp - close + open)
 
     series = df_copy.apply(max_price, axis=1)
     series = series.rolling(length, min_periods=1).sum()
     return series
+
 
 # calculate simple moving average
 def sma(series, length=9):
@@ -94,7 +102,8 @@ def ema(series, length=9):
 
     series = series.sort_index()
     # adjust = False enables recursion formula
-    return series.ewm(span=length,min_periods=0,adjust=False,ignore_na=False).mean()
+    return series.ewm(span=length, min_periods=0, adjust=False, ignore_na=False).mean()
+
 
 # calculate range
 def vola_range(close, high, low, mode='ATR', length=9, percentile=False):
@@ -108,28 +117,25 @@ def vola_range(close, high, low, mode='ATR', length=9, percentile=False):
 
     if mode == 'ALR':
         logger.info(f"Calculating ALR({length})")
+
         def atr_function(x):
             close_p = x['close_p']
             high = x['high']
             low = x['low']
-            return max(
-                (close_p + high) / 2.0 - low,
-                close_p - low,
-                0
-            )
+            return max((close_p + high) / 2.0 - low, close_p - low, 0)
+
     elif mode == 'AHR':
         logger.info(f"Calculating AHR({length})")
+
         def atr_function(x):
             close_p = x['close_p']
             high = x['high']
             low = x['low']
-            return max(
-                high - (close_p + low) / 2.0,
-                high - close_p,
-                0
-            )
+            return max(high - (close_p + low) / 2.0, high - close_p, 0)
+
     else:
         logger.info(f"Calculating ATR({length})")
+
         def atr_function(x):
             close_p = x['close_p']
             high = x['high']
@@ -146,9 +152,9 @@ def vola_range(close, high, low, mode='ATR', length=9, percentile=False):
         return series / close
     return series
 
+
 # calculate signals
 def crossovers(short, long, scaledsignal=False):
-
     calc_df = pd.concat([short, long], axis=1)
     calc_df.columns = ['s', 'l']
 
@@ -157,13 +163,12 @@ def crossovers(short, long, scaledsignal=False):
     sig_scale = 0
     if scaledsignal:
         sig_str = 'scaled'
-        sig_scale = 2**int(log2(calc_df['s'].min()))
+        sig_scale = 2 ** int(log2(calc_df['s'].min()))
 
     logger.info(f"Calculating {sig_str} mode ({sig_scale}) and trading signals")
 
-
     # Get relation of curves (short curves higher than long curve: positive (LONG/BUY))
-    calc_df['m'] = np.where(short >= long,sig_scale + 1, 0)
+    calc_df['m'] = np.where(short >= long, sig_scale + 1, 0)
     calc_df['m'] = np.where(short < long, sig_scale - 1, calc_df['m'])
 
     # Signals are mode changes, i.e., crossovers
@@ -173,7 +178,7 @@ def crossovers(short, long, scaledsignal=False):
             calc_df['m'].shift(1) < sig_scale,
         ),
         sig_scale,
-        None
+        None,
     )
 
     calc_df['n'] = np.where(
@@ -182,7 +187,7 @@ def crossovers(short, long, scaledsignal=False):
             calc_df['m'].shift(1) > sig_scale,
         ),
         sig_scale,
-        None
+        None,
     )
     calc_df = calc_df[['m', 'p', 'n']]
     calc_df.columns = ['Mode', 'P_Signal', 'N_Signal']
@@ -197,7 +202,7 @@ def wilder_rsi(close, open=None, length=14):
     gains = close.diff(1)
     if open is not None:
         gains = (close - open) / open
-    
+
     df = pd.concat([close, gains], axis=1)
     df.columns = ['close', 'diff']
     df = df.fillna(0.0)
@@ -206,7 +211,6 @@ def wilder_rsi(close, open=None, length=14):
     df['gain'] = df['diff'].clip(lower=0)
     df['loss'] = df['diff'].clip(upper=0).abs()
 
-
     for col in ['gain', 'loss']:
         # Calculate initial average gains and losses using rolling mean
         df[f"avg_{col}"] = df[col].rolling(window=length, min_periods=1).mean()
@@ -214,8 +218,9 @@ def wilder_rsi(close, open=None, length=14):
         t_col = df.columns.get_loc(f"avg_{col}")
         # Apply Wilder's smoothing formula using apply after the initial window
         for i in range(length + 1, len(df)):
-            df.iloc[i, t_col] = (df.iloc[i - 1, t_col] * (length - 1) + df.iloc[i, s_col]) / length
-
+            df.iloc[i, t_col] = (
+                df.iloc[i - 1, t_col] * (length - 1) + df.iloc[i, s_col]
+            ) / length
 
     # Calculate RS and RSI
     df['rs'] = df['avg_gain'] / df['avg_loss']
@@ -272,7 +277,9 @@ def find_isolated_spikes(series, num_spikes=10, n_distance=5):
     return series
 
 
-def calc_atr_spikes(yf_df: pd.DataFrame, clip_periods=100, length=1, num_spikes=10, n_distance=5):
+def calc_atr_spikes(
+    yf_df: pd.DataFrame, clip_periods=100, length=1, num_spikes=10, n_distance=5
+):
     """
     Convenience function to extract ALR/AHR extrema.
 
@@ -299,7 +306,7 @@ def calc_atr_spikes(yf_df: pd.DataFrame, clip_periods=100, length=1, num_spikes=
             high=stock_df['High'],
             low=stock_df['Low'],
             mode=f"A{opt}",
-            length=length
+            length=length,
         )
 
     high_markers_series = find_isolated_spikes(
