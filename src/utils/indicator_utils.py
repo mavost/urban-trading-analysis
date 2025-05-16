@@ -9,9 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 # scale price action
-def calibrate_prices(df, key='Close'):
-    logger.info(f"Scaling equity price action data based on first {key}")
-
+def calibrate_prices(df, key='Close', method='First', divisor=100, scaler=100):
     columns = ['Close', 'Open', 'High', 'Low', 'Adj Close']
     # Key needs to be in columns
     assert key in columns
@@ -20,10 +18,29 @@ def calibrate_prices(df, key='Close'):
     for col in columns:
         assert col in df.columns
 
+    # Identify scaler
+    if method == 'First':
+        divisor = df[key].iloc[0]
+    elif method == 'Manual':
+        divisor = int(divisor)
+    elif method == 'Median':
+        divisor = df[key].median()
+    else:
+        method = 'No-Op'
+        divisor = 1
+        scaler = 1
+    assert divisor > 0
+    assert scaler > 0
+
+    logger.info(
+        f"""
+    Scaling price action based on {key} and method {method}
+     with a divisor of {divisor:8.2f} and scaler {scaler:8.2f}"""
+    )
+
     df_scaled = df.copy()
-    scaler = df[key].iloc[0]
     for col in columns:
-        df_scaled[col] = df_scaled[col] / scaler * 100.0
+        df_scaled[col] = df_scaled[col] / divisor * scaler
     return df_scaled
 
 
@@ -47,8 +64,8 @@ def calibrate_volume(df, key='Volume', method='First', divisor=100000, scaler=10
     assert scaler > 0
 
     logger.info(
-        f"""\n
-    Scaling trading volume data based on {key} and method {method}\n
+        f"""
+    Scaling trading volume data based on {key} and method {method}
      with a divisor of {divisor} and scaler {scaler}"""
     )
 
