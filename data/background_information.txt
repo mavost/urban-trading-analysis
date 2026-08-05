@@ -1,0 +1,289 @@
+================================================================================
+Dokumentation, Teil 1: LEAPS & POOR MAN'S COVERED CALL (PMCC) AM BEISPIEL NVDA
+================================================================================
+Kapitalbasis: 100.000 USD
+Zielsetzung: Kapitaloptimierte Generierung von Cashflow mittels Hebelwirkung
+Stand: August 2026
+
+--------------------------------------------------------------------------------
+INHALTSVERZEICHNIS
+--------------------------------------------------------------------------------
+1. Grundlagen: Die Mechanik von LEAPs
+2. Strategie-Konzept: Der Poor Man's Covered Call (PMCC)
+3. Praxis-Szenario: Nvidia (NVDA) Schritt-für-Schritt
+4. Szenarien-Analyse: Profit, Verlust und Risikofälle
+5. Positionsgrößen- und Risikomanagement für 100.000 USD
+6. Handlungsleitfaden für das Depotmanagement (Rollen & Krisen)
+
+--------------------------------------------------------------------------------
+1. GRUNDLAGEN: DIE MECHANIK VON LEAPS
+--------------------------------------------------------------------------------
+LEAPs (Long-Term Equity Anticipation Securities) sind standardisierte
+Optionskontrakte mit einer Restlaufzeit von mindestens einem bis zu drei Jahren.
+Sie verhalten sich in ihren Grundzügen wie kurzfristige Optionen, weisen jedoch
+aufgrund ihrer extrem langen Laufzeit spezifische mathematische Eigenheiten auf:
+
+* Kontraktgröße: 1 Kontrakt repräsentiert immer genau 100 Aktien des Basiswerts.
+* Das Theta-Paradoxon (Zeitwertverlust):
+  Beim Verkauf von Optionen (Short) spekuliert man primär auf den Verfall des
+  Zeitwerts (Theta). Bei LEAPs verhält sich Theta jedoch nicht linear. In der
+  ersten Hälfte der Laufzeit ist der Zeitwertverlust extrem langsam und fast
+  unmerklich. Erst in den letzten 30 bis 90 Tagen vor dem Verfallsdatum
+  beschleunigt sich der Wertverlust exponentiell.
+* Konsequenz für Stillhalter:
+  Der direkte, nackte Verkauf von LEAPs zur schnellen Generierung von
+  Zeitwertgewinnen ist ineffizient, da das Kapital über Monate oder Jahre in
+  einer Position gebunden ist, deren Zeitwert kaum schrumpft.
+
+--------------------------------------------------------------------------------
+2. STRATEGIE-KONZEPT: DER POOR MAN'S COVERED CALL (PMCC)
+--------------------------------------------------------------------------------
+Der PMCC ist ein synthetischer Covered Call (eine diagonale Call-Spread-Struktur).
+Statt für sehr viel Kapital 100 echte Aktien zu erwerben, kauft man eine tief
+im Geld (In-The-Money / ITM) liegende LEAP-Kaufoption. Diese fungiert als
+Sicherheit (Collateral). Gegen diesen LEAP werden zyklisch (alle 30-45 Tage)
+kurzfristige Call-Optionen aus dem Geld (Out-Of-The-Money / OTM) verkauft.
+
+Die mathematische Bedingung für ein valides Setup:
+* Der gekaufte LEAP muss ein hohes Delta (0,80 bis 0,90) aufweisen. Das bedeutet,
+  dass die Option die Kursbewegung der echten Aktie nahezu 1:1 nachbildet, jedoch
+  nur einen Bruchteil des Kapitals bindet.
+* Der LEAP sollte so gut wie kein Extrinsic Value (Zeitwert) besitzen, sondern
+  fast ausschließlich aus Intrinsic Value (innerem Wert) bestehen. Dadurch
+  schützt man sich vor dem eigenen Zeitwertverlust des LEAPs.
+
+--------------------------------------------------------------------------------
+3. PRAXIS-SZENARIO: NVIDIA (NVDA) SCHRITT-FÜR-SCHRITT
+--------------------------------------------------------------------------------
+Ausgangslage:
+Nvidia (NVDA) notiert aktuell bei einem fiktiven Kurs von genau 200,75 USD.
+
+Traditioneller Covered Call (Vergleichsbasis):
+* Kauf von 100 echten NVDA Aktien = 20.075 USD Kapitalbindung.
+* Verkauf von 1 Short-Call gegen die Aktien.
+
+PMCC-Setup (Kapitaloptimiert):
+
+SCHRITT 1: Der Kauf der Absicherung (Long LEAP)
+* Transaktion: Kauf 1 NVDA Jan 2028 $140 Call
+* Strike-Preis: 140,00 USD (60,75 USD unter dem aktuellen Aktienkurs)
+* Delta: ~0,85 (Simuliert 85 echte Aktien)
+* Angenommener Preis (Prämie): 73,00 USD pro Aktie
+* Gesamtkosten (Debit): 7.300 USD
+* Kapitalersparnis: 20.075 USD (Aktien) - 7.300 USD (LEAP) = 12.775 USD freies Kapital.
+
+SCHRITT 2: Der Verkauf der Einkommenskomponente (Short Call)
+* Transaktion: Verkauf 1 NVDA Sept 2026 $220 Call (Laufzeit ca. 30–45 Tage)
+* Strike-Preis: 220,00 USD (19,25 USD über dem aktuellen Aktienkurs)
+* Delta: ~0,30 (Standard für konservative Einnahmen)
+* Angenommene Prämie (Credit): 5,50 USD pro Aktie
+* Gesamteinnahme: 550 USD Sofortgutschrift
+
+SCHRITT 3: Berechnung des Netto-Kapitaleinsatzes
+* Initialer Debit (Kaufpreis LEAP):  + 7.300 USD
+* Initialer Credit (Einnahme Short): -   550 USD
+* Tatsächlicher Netto-Kapitaleinsatz:  6.750 USD
+
+--------------------------------------------------------------------------------
+4. SZENARIEN-ANALYSE: PROFIT, VERLUST UND RISIKOFÄLLE
+--------------------------------------------------------------------------------
+Nach Ablauf der ersten 30–45 Tage der kurzfristigen Option ergeben sich drei
+wesentliche Marktszenarien:
+
+SZENARIO A: Seitwärtsbewegung oder moderater Anstieg (Der Idealfall)
+* Kursverlauf: NVDA steigt leicht auf 215,00 USD.
+* Mechanik: Der verkaufte $220 Call läuft aus dem Geld und verfällt wertlos.
+* Ergebnis: Sie behalten die 550 USD Prämie zu 100%. Ihr gekaufter LEAP hat
+  durch den Kursanstieg auf 215 USD zusätzlich an innerem Wert gewonnen.
+* Folgeaktion: Sie verkaufen direkt den nächsten Call für den darauffolgenden
+  Monat (z.B. Strike $235) und generieren erneut Cashflow.
+
+SZENARIO B: Starker Kursausbruch nach oben (Der "Zu Gute" Fall)
+* Kursverlauf: NVDA explodiert auf 240,00 USD.
+* Mechanik: Der Short-Call bei $220 ist tief im Geld. Sie werden verpflichtet,
+  100 Aktien zu 220 USD zu liefern. Um diese Verpflichtung zu erfüllen, schließen
+  Sie die Gesamtposition (Glattstellung beider Schenkel).
+* Die mathematische Schutzregel: Die Differenz der Strikes MUSS größer sein als
+  der bezahlte Netto-Debit.
+  -> Differenz der Strikes: $220 (Short) - $140 (Long) = $80 (Wert: 8.000 USD)
+  -> Bezahlter Netto-Debit: 6.750 USD
+* Ergebnis: Ihr maximaler, gedeckelter Gewinn beträgt:
+  8.000 USD (Auszahlung Spread) - 6.750 USD (Einsatz) = + 1.250 USD Profit.
+
+SZENARIO C: Drastischer Kurseinbruch (Der Risikofall)
+* Kursverlauf: NVDA stürzt aufgrund schlechter Quartalszahlen auf 160,00 USD.
+* Mechanik: Der verkaufte $220 Call verfällt wertlos, die 550 USD gehören Ihnen.
+  Ihr $140 LEAP verliert jedoch massiv an Wert, da er sich dem Basispreis nähert.
+* Verlustbegrenzung: Im Gegensatz zum echten Aktionär, der bei einem Fall von
+  200,75 auf 160 USD einen Verlust von 4.075 USD auf dem Papier verbucht, ist
+  Ihr absolut maximaler Verlust bei dieser Strategie strikt auf den eingesetzten
+  Netto-Debit von 6.750 USD begrenzt. Ihr LEAP kann niemals weniger als 0 USD
+  wert sein.
+
+--------------------------------------------------------------------------------
+5. POSITIONSGRÖSSEN- UND RISIKOMANAGEMENT FÜR 100.000 USD
+--------------------------------------------------------------------------------
+Die rein rechnerische Kapazität Ihres 100.000 USD Depots beträgt bei Kosten von
+6.750 USD pro Kontrakt exakt 14,81 Einheiten. In der professionellen Praxis ist
+ein "All-In" jedoch mathematischer Selbstmord aufgrund des Hebelrisikos.
+
+Es ergeben sich drei Allokations-Strategien für Ihr Kapital:
+
+KONSERVATIV / PROFESSIONELL (Empfohlen)
+* Anzahl Kontrakte: 3 bis 4
+* Gesamtkapitalbindung: 20.250 USD bis 27.000 USD
+* Verbleibende Cash-Reserve: ~73.000 USD
+* Risiko-Profil: Niedrig bis moderat. Sie halten sich an die fundamentale
+  Regel, nie mehr als 20–25% des Gesamtdepots in einen einzelnen Basiswert (NVDA)
+  zu investieren. Das restliche Kapital steht für Diversifikation in andere
+  Sektoren oder als Sicherheitsnetz bereit.
+
+AGGRESSIV (Erhöhtes Klumpenrisiko)
+* Anzahl Kontrakte: 10
+* Gesamtkapitalbindung: 67.500 USD
+* Verbleibende Cash-Reserve: 32.500 USD
+* Risiko-Profil: Hoch. Über zwei Drittel Ihres Vermögens hängen direkt an der
+  Wertentwicklung und der impliziten Volatilität von Nvidia. Korrigiert der
+  Tech-Sektor scharf, erleidet das Depot massive temporäre Drawdowns.
+
+MAXIMALES RISIKO (Systemischer Blindflug)
+* Anzahl Kontrakte: 14
+* Gesamtkapitalbindung: 94.500 USD
+* Verbleibende Cash-Reserve: 5.500 USD
+* Risiko-Profil: Extrem kritisch. Sie kontrollieren synthetisch 1.400 Aktien im
+  Gegenwert von über 280.000 USD. Bei einem Marktcrash haben Sie keine Liquidität,
+  mit der Sie Positionen verteidigen oder nachkaufen können. Margin Calls drohen.
+
+--------------------------------------------------------------------------------
+6. HANDLUNGSLEITFADEN FÜR DAS DEPOTMANAGEMENT (ROLLEN & KRISEN)
+--------------------------------------------------------------------------------
+Das Geheimnis einer langfristig profitablen PMCC-Strategie liegt im aktiven
+Management des Short-Calls, insbesondere wenn sich der Markt gegen Sie bewegt.
+
+Fall 1: Der Kurs fällt (Management nach unten)
+Wenn NVDA unter den Strike Ihres LEAPs ($140) oder signifikant Richtung $160 fällt:
+1. Warten Sie, bis der aktuelle Short-Call (z.B. $220) durch den Zeitwertverfall
+   und den Kursrückgang ca. 80-90% seines Wertes verloren hat.
+2. Kaufen Sie diesen Call für wenige Dollar zurück (Buy-To-Close).
+3. Verkaufen Sie sofort einen neuen Short-Call für die nächsten 30 Tage mit einem
+   niedrigeren Strike (z.B. $185), um erneut Prämie zu generieren.
+4. ACHTUNG: Der neue Short-Strike darf NIEMALS unter dem rechnerischen Break-Even
+   Ihres LEAPs liegen, da Sie sonst bei einem plötzlichen Rebound einen Verlust
+   erleiden, falls Sie ausgestoppt werden.
+
+Fall 2: Der Kurs testet den Short-Strike (Management nach oben)
+Wenn NVDA schnell auf 218 USD steigt und droht, die $220-Marke zu durchbrechen:
+1. Wenn Sie den maximalen Gewinn (Szenario B) realisieren wollen, tun Sie nichts
+   und lassen Sie die Position am Verfallstag ausbuchen.
+2. Wenn Sie die Position behalten und weiterrollen möchten, nutzen Sie das
+   "Rollen auf Zeit und Distanz": Kaufen Sie den $220 Call zurück und verkaufen
+   Sie zeitgleich einen Call mit 30 Tagen mehr Laufzeit und einem höheren Strike(z.B. $235).
+   Ziel ist es, für diesen Kombinations-Trade eine Netto-Gutschrift(Credit) zu erhalten,
+   um die Kostenbasis weiter zu senken.
+
+Zusammenfassung der goldenen Grundregeln:
+1. Überhebeln Sie Ihr Depot nicht. Halten Sie Cash für Anpassungen bereit.
+2. Wählen Sie das Delta des LEAPs hoch genug (0,85+), um den Zeitwertverlust auf
+Ihrer Kaufseite zu minimieren.
+3. Berechnen Sie vor jedem Trade die Strike-Differenz im Verhältnis zur gezahlten
+Prämie, um mathematisch das Risiko eines Verlusts bei extremen Aufwärts-Gaps auszuschließen.
+
+
+================================================================================
+DOKUMENTATION, Teil 2: ANALOGIE ZU PMCC (POOR MAN'S COVERED CALL) IM OPTIONSHANDEL
+================================================================================
+
+1. GRUNDPRINZIP: DER "POOR MAN'S CASH-SECURED PUT" (PMCSP)
+--------------------------------------------------------------------------------
+Analog zum PMCC (bei dem eine tief im Geld liegende LEAPS-Call-Option als Aktien-
+ersatz genutzt wird) existiert für die Put-Seite der "Poor Man's Cash-Secured Put"
+(auch als Put Diagonal Debit Spread bezeichnet).
+
+* Ziel: Fortlaufende Einnahmen durch den Verkauf kurzlaufender Put-Optionen,
+  ohne jedoch den vollen Barwert für 100 Aktien als Sicherheit (Margin) hinter-
+  legen zu müssen.
+* Long Leg (Absicherung): Kauf einer langlaufenden Put-Option (LEAPS, > 1 Jahr)
+  weit im Geld (ITM, Delta ca. -0.75).
+* Short Leg (Einnahme): Verkauf einer kurzlaufenden Put-Option (30-45 Tage)
+  aus dem Geld (OTM, Delta ca. -0.30).
+
+Vorteil gegenüber klassischem CSP: Extreme Kapitaleffizienz. Statt der vollen
+Besicherung für 100 Aktien wird nur der Nettodebit des Spreads als maximales
+Risiko gebunden.
+
+
+2. PRAXISBEISPIEL MIT NVIDIA (NVDA)
+--------------------------------------------------------------------------------
+Ausgangslage: NVDA steht fiktiv bei ~206,50 USD.
+Klassischer CSP (Strike 200 USD) erfordert: 20.000 USD Kapitalsicherheit.
+
+Das Setup für den Poor Man's CSP (2 Beine):
+* KAUF  1x LEAPS Put | Strike: 240 USD (ITM)  | Laufzeit: ~15 Monate | Kosten: 4.800 USD
+* VERKAUF 1x Short Put| Strike: 195 USD (OTM)  | Laufzeit: 30 Tage    | Einnahme: 500 USD
+* Gesamteinsatz (Nettodebit): 4.300 USD (Statt 20.000 USD)
+
+Szenarien nach 30 Tagen:
+* Szenario A (NVDA steigt/seitwärts): Short Put verfällt wertlos. Die 500 USD
+  Prämie bleiben als Gewinn. Nächster Short Put wird verkauft.
+* Szenario B (NVDA fällt leicht auf ~197 USD): Short Put verfällt wertlos. Der
+  Long LEAPS Put gewinnt an innerem Wert. Buchgewinn steigt.
+* Szenario C (NVDA bricht ein auf 180 USD): Beide Positionen werden geschlossen.
+  Der Short Put kostet im Rückkauf ca. 1.500 USD, aber der Long LEAPS Put ist
+  jetzt mindestens 6.000 USD wert. Durch die weite Strike-Differenz entsteht
+  trotz Crash ein kleiner Gesamtgewinn.
+
+Goldene Einstiegsregel:
+(Strike Long Put - Strike Short Put) MUSS größer sein als der gezahlte Nettodebit!
+
+
+3. DIE ERWEITERUNG: SYNTHETIC IRON CONDOR (4 BEINE)
+--------------------------------------------------------------------------------
+Man kann PMCC (Calls) und PMCSP (Puts) auf dieselbe Aktie kombinieren. Es entsteht
+ein "Poor Man's Covered Strangle" bzw. ein synthetischer Iron Condor aus 4 Optionen.
+
+Das Setup um den aktuellen Kurs (~206,50 USD):
+* Bein 1 (Long Call):  Strike 170 USD (ITM), Laufzeit Jan 2027  (Kauf: ~5.300 USD)
+* Bein 2 (Long Put):   Strike 240 USD (ITM), Laufzeit Jan 2027  (Kauf: ~4.800 USD)
+* Bein 3 (Short Call): Strike 225 USD (OTM), Laufzeit 30 Tage   (Verkauf: +450 USD)
+* Bein 4 (Short Put):  Strike 190 USD (OTM), Laufzeit 30 Tage   (Verkauf: +500 USD)
+
+Vorteile:
+* Doppelte Prämie (Call + Put) bei annähernd gleichem Kapitaleinsatz.
+* Breite Gewinnzone in Seitwärtsmärkten.
+* Extrem hoher Hebel (Kosten ca. 9.150 USD statt ca. 40.000 USD beim echten Strangle).
+
+Praxis-Risiken bei 4 Beinen:
+* Whipsaw-Effekt: Bei extremen Ausbrüchen verliert die Gegenseite massiv an Wert.
+* Hohe Gebühren (4 Transaktionen gleichzeitig).
+* Große Geld-Brief-Spannen (Bid-Ask-Spreads) bei LEAPS führen zu Slippage-Verlusten.
+* Komplexes Management bei schnellen Trendwechseln.
+
+
+4. ARCHITEKTUR FÜR EINEN AUTOMATISIERTEN PYTHON-AGENTEN (YFINANCE)
+--------------------------------------------------------------------------------
+Über die Python-Bibliothek `yfinance` lassen sich Optionsketten von Yahoo Finance
+automatisiert auslesen (`tk.option_chain(date)`). Ein programmierter Agent sollte
+folgende drei Logik-Module besitzen:
+
+Modul 1: Setup-Validierung
+* Filtert LEAPS nach Laufzeit (> 365 Tage) und Delta (~ +/- 0.75).
+* Filtert Kurzläufer nach Laufzeit (30-45 Tage) und Delta (~ +/- 0.30).
+* Berechnet den Mid-Price `(Bid + Ask) / 2`.
+* Erteilt "Go"-Signal nur, wenn Strike-Breite > Nettodebit.
+
+Modul 2: Interventions-Trigger (Monitoring)
+* Überwacht das Delta der Short-Optionen. Steigt es von 0.30 auf > 0.50 (Option
+  wird At-the-Money), schlägt der Agent Alarm.
+* Berechnet fortlaufend den verbleibenden Zeitwert (Extrinsic Value).
+
+Modul 3: Roll-Metriken (Verteidigung)
+* Unberührte Seite: Fällt die Aktie, rollt der Agent den Short-Call automatisch
+  näher an den Geldkurs heran, um zusätzliche Prämie zu generieren.
+* Bedrohte Seite: Prüft die Implizite Volatilität (IV). Der Agent errechnet, ob
+  ein Rollen in den nächsten Monat ein "Net Credit" einbringt. Falls das Rollen
+  Geld kosten würde (Net Debit), empfiehlt er das Schließen des Gesamt-Spreads.
+
+Wichtiger Entwickler-Hinweis:
+Datenabruf nur während der Haupthandelszeit der NYSE (15:30 - 22:00 Uhr MEZ)
+durchführen, da außerhalb dieser Zeiten die Bid-Ask-Spreads extrem verzerren.
+=============================================================================
